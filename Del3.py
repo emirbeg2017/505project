@@ -7,7 +7,12 @@ import matplotlib.pyplot as plt
 # Load CSV file into a DataFrame
 df = pd.read_csv("NYPD_Arrest_Data__Year_to_Date.csv")
 
-
+"""
+First question:
+1.	Are arrests in Bronx and Brooklyn proportional to their populations?
+    a.	H0: Arrests in the Bronx and Brooklyn are proportional to their populations
+    b.	H1: Arrests in the Bronx and Brooklyn are not proportional to their populations
+"""
 # Arrest by Borough  bar graph
 filtered_df = df['ARREST_BORO'].value_counts()
 
