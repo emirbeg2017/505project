@@ -158,3 +158,94 @@ if p < alpha:
     print("Reject the null hypothesis: The number of arrests is significantly different on Federal holidays.")
 else:
     print("Fail to reject the null hypothesis: No significant difference in the number of arrests on holidays vs. non-holidays.")
+
+"""
+Question 3:
+3.	Is there an association between gender and race (Black vs. Asian) in the population of Queens?
+    a.	H0: Sex and race (Black/Asian) are independent. The proportion of males and females is the same across the racial groups.
+    b.	H1: Sex and race (Black/Asian) are dependent. The proportion of males and females differs across the racial groups.
+
+"""
+
+race_sex_counts = df[df['ARREST_BORO'] == 'Q'].groupby(['PERP_RACE', 'PERP_SEX']).size().unstack()
+print('\n\n\nQuestion 3:')
+black_asian_df = race_sex_counts.loc[['BLACK', 'ASIAN / PACIFIC ISLANDER']]
+male_counts = black_asian_df['M']
+female_counts = black_asian_df['F']
+
+
+male_arrests = male_counts.to_dict()
+female_arrests = female_counts.to_dict()
+
+
+# Create the contingency table
+contingency_table = np.array([
+    [male_arrests['BLACK'], male_arrests['ASIAN / PACIFIC ISLANDER']],  # Male (row 1)
+    [female_arrests['BLACK'], female_arrests['ASIAN / PACIFIC ISLANDER']]  # Female (row 2)
+])
+
+# Perform Chi-Square Test for Independence
+chi2, p, dof, expected = stats.chi2_contingency(contingency_table)
+
+# Print results
+print(expected)
+print(f"Chi-Square Statistic: {chi2}")
+print(f"P-value: {p}")
+print(f"Degrees of Freedom: {dof}")
+
+
+# Interpretation
+alpha = 0.05  # Significance level
+if p < alpha:
+    print("P is less than alpha so:")
+    print("Reject the null hypothesis (H0): Sex and race (Black/Asian) are dependent. The proportion of males and females differs across the racial groups.")
+else:
+    print("P is greater than alpha so:")
+    print("Fail to reject the null hypothesis (H0): Sex and race (Black/Asian) are independent. The proportion of males and females is the same across the racial groups.")
+   
+# Create Race-Gender Bar Plot
+# Extract expected values for each race and gender
+expected_male_black = expected[0][0]
+expected_male_asian = expected[0][1]
+expected_female_black = expected[1][0]
+expected_female_asian = expected[1][1]
+
+# Extract observed values for male and female arrests
+races = list(male_arrests.keys())
+male_values = list(male_arrests.values())
+female_values = list(female_arrests.values())
+expected_male_values = [expected_male_black, expected_male_asian]
+expected_female_values = [expected_female_black, expected_female_asian]
+
+# Set bar width and positions
+width = 0.35  # Width of bars
+x = np.arange(len(races))  # x-axis positions for the races
+
+# Create the bar plot
+fig, ax = plt.subplots(figsize=(10, 5))
+
+# Plot the observed values (actual arrests) on the left side
+ax.bar(x - width/2, female_values, width, label='Observed Female Arrests', color='orange')
+ax.bar(x - width/2, male_values, width, bottom=female_values, label='Observed Male Arrests', color='blue')
+
+# Plot the expected values (expected arrests) on the right side
+ax.bar(x + width/2, expected_female_values, width, label='Expected Female Arrests', color='lightcoral', alpha=0.7)
+ax.bar(x + width/2, expected_male_values, width, bottom=expected_female_values, label='Expected Male Arrests', color='lightgreen', alpha=0.7)
+
+# Labels and title
+ax.set_xlabel("Race")
+ax.set_ylabel("Number of Arrests")
+ax.set_title("Male vs. Female Arrests by Race (Observed and Expected) in Queens for Black and Asian/Pacific Islander")
+ax.set_xticks(x)
+ax.set_xticklabels(races)
+ax.legend()
+
+# Display values on top of bars
+for i, race in enumerate(races):
+    ax.text(i - width/2, female_values[i] / 2, f"{int(female_values[i])}", ha='center', color='black', fontsize=10)
+    ax.text(i - width/2, female_values[i] + male_values[i] / 2, f"{int(male_values[i])}", ha='center', color='black', fontsize=10)
+    ax.text(i + width/2, expected_female_values[i] / 2, f"{int(expected_female_values[i])}", ha='center', color='black', fontsize=10)
+    ax.text(i + width/2, expected_female_values[i] + expected_male_values[i] / 2, f"{int(expected_male_values[i])}", ha='center', color='black', fontsize=10)
+
+plt.tight_layout()  # To prevent overlapping of labels
+plt.show()
